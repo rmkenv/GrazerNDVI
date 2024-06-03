@@ -2,12 +2,31 @@ import streamlit as st
 import geemap.foliumap as geemap
 import ee
 import datetime
+import json
+import tempfile
 
 # Authenticate and initialize the Earth Engine library.
 service_account = st.secrets["google"]["service_account"]
 private_key = st.secrets["google"]["private_key"]
 
-credentials = ee.ServiceAccountCredentials(service_account, private_key)
+credentials_dict = {
+    "type": "service_account",
+    "project_id": "your-project-id",  # Replace with your project ID
+    "private_key_id": "your-private-key-id",  # Replace with your private key ID
+    "private_key": private_key,
+    "client_email": service_account,
+    "client_id": "your-client-id",  # Replace with your client ID
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{service_account}"
+}
+
+with tempfile.NamedTemporaryFile(mode='w', delete=False) as fp:
+    json.dump(credentials_dict, fp)
+    temp_cred_file = fp.name
+
+credentials = ee.ServiceAccountCredentials(service_account, temp_cred_file)
 ee.Initialize(credentials)
 
 # Function to calculate NDVI for each image in the collection.
